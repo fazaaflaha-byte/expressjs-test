@@ -104,9 +104,9 @@
       background: #1e293b;
       color: #e2e8f0;
       font: inherit;
-      font-size: 0.9rem;
+      font-size: 0.95rem;
       font-weight: 600;
-      padding: 10px 22px;
+      padding: 12px 28px;
       border-radius: 999px;
       cursor: pointer;
       transition: background 0.15s ease, border-color 0.15s ease;
@@ -126,92 +126,49 @@
       outline-offset: 2px;
     }
 
-    .log-panel {
-      width: 100%;
-      max-width: 560px;
-      background: #020617;
-      border: 1px solid #334155;
-      border-radius: 12px;
-      overflow: hidden;
-      display: none;
+    .log-button:disabled {
+      opacity: 0.6;
+      cursor: wait;
     }
 
-    .log-panel.open {
-      display: block;
-    }
-
-    .log-panel-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 12px 16px;
-      background: #0b1220;
-      border-bottom: 1px solid #1e293b;
-      font-size: 0.78rem;
-      color: #94a3b8;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-    }
-
-    .log-list {
-      max-height: 320px;
-      overflow-y: auto;
-      font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
-      font-size: 0.78rem;
-      line-height: 1.55;
-    }
-
-    .log-entry {
-      display: flex;
-      gap: 10px;
-      padding: 7px 16px;
-      border-bottom: 1px solid #0f172a;
-      white-space: nowrap;
-    }
-
-    .log-entry:last-child {
-      border-bottom: none;
-    }
-
-    .log-time {
-      color: #475569;
-      flex-shrink: 0;
-    }
-
-    .log-method {
-      color: #93c5fd;
-      flex-shrink: 0;
-      font-weight: 600;
-    }
-
-    .log-path {
-      color: #cbd5e1;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .log-status {
-      margin-left: auto;
-      flex-shrink: 0;
-      font-weight: 600;
-    }
-
-    .log-status.ok      { color: #6ee7b7; }
-    .log-status.redirect{ color: #fcd34d; }
-    .log-status.error   { color: #fca5a5; }
-
-    .log-duration {
+    .hint {
       color: #64748b;
-      flex-shrink: 0;
-      min-width: 52px;
-      text-align: right;
+      font-size: 0.82rem;
+      text-align: center;
+      max-width: 420px;
     }
 
-    .log-empty {
-      padding: 24px 16px;
-      text-align: center;
-      color: #475569;
+    .hint code {
+      font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+      color: #94a3b8;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #065f46;
+      color: #d1fae5;
+      border: 1px solid #047857;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      opacity: 0;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .toast.error {
+      background: #7f1d1d;
+      color: #fecaca;
+      border-color: #b91c1c;
     }
   </style>
 </head>
@@ -224,19 +181,15 @@
     <div class="loading">Memuat konfigurasi…</div>
   </div>
 
-  <button id="log-toggle" class="log-button" type="button" aria-expanded="false" aria-controls="log-panel">
-    Tampilkan Logs
+  <button id="log-toggle" class="log-button" type="button">
+    Tekan untuk Log
   </button>
 
-  <div id="log-panel" class="log-panel">
-    <div class="log-panel-header">
-      <span>Request logs</span>
-      <span id="log-count">0</span>
-    </div>
-    <div id="log-list" class="log-list">
-      <div class="log-empty">Belum ada log.</div>
-    </div>
-  </div>
+  <p class="hint">
+    Log muncul di <strong>terminal</strong> tempat <code>npm start</code> berjalan.
+  </p>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <script>
     function createRow(key, valueNode) {
@@ -289,94 +242,43 @@
       }
     }
 
-    loadEnv();
+    const toast = document.getElementById('toast');
+    let toastTimer = null;
+
+    function showToast(message, isError) {
+      toast.textContent = message;
+      toast.classList.toggle('error', Boolean(isError));
+      toast.classList.add('show');
+
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
+    }
 
     const logToggle = document.getElementById('log-toggle');
-    const logPanel = document.getElementById('log-panel');
-    const logList = document.getElementById('log-list');
-    const logCount = document.getElementById('log-count');
+    let clickCount = 0;
 
-    let logsOpen = false;
-    let refreshTimer = null;
+    logToggle.addEventListener('click', async () => {
+      clickCount += 1;
+      logToggle.disabled = true;
 
-    function statusClass(status) {
-      if (status >= 500) return 'error';
-      if (status >= 400) return 'error';
-      if (status >= 300) return 'redirect';
-      return 'ok';
-    }
-
-    function logEntryNode(entry) {
-      const row = document.createElement('div');
-      row.className = 'log-entry';
-
-      const time = new Date(entry.time);
-      const timeNode = document.createElement('span');
-      timeNode.className = 'log-time';
-      timeNode.textContent = time.toLocaleTimeString('id-ID', { hour12: false });
-
-      const methodNode = document.createElement('span');
-      methodNode.className = 'log-method';
-      methodNode.textContent = entry.method;
-
-      const pathNode = document.createElement('span');
-      pathNode.className = 'log-path';
-      pathNode.textContent = entry.path;
-      pathNode.title = entry.path;
-
-      const statusNode = document.createElement('span');
-      statusNode.className = 'log-status ' + statusClass(entry.status);
-      statusNode.textContent = String(entry.status);
-
-      const durationNode = document.createElement('span');
-      durationNode.className = 'log-duration';
-      durationNode.textContent = entry.durationMs + 'ms';
-
-      row.append(timeNode, methodNode, pathNode, statusNode, durationNode);
-      return row;
-    }
-
-    async function loadLogs() {
       try {
-        const response = await fetch('/api/logs');
+        const response = await fetch('/api/click', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ asal: 'tombol-halaman', jumlah: clickCount }),
+        });
+
         if (!response.ok) throw new Error('HTTP ' + response.status);
-        const data = await response.json();
 
-        logCount.textContent = data.total + ' / ' + data.max;
-
-        if (!data.logs.length) {
-          const empty = document.createElement('div');
-          empty.className = 'log-empty';
-          empty.textContent = 'Belum ada log.';
-          logList.replaceChildren(empty);
-          return;
-        }
-
-        logList.replaceChildren(...data.logs.map(logEntryNode));
+        showToast('Tercatat di terminal ✓');
       } catch (error) {
-        const failed = document.createElement('div');
-        failed.className = 'log-empty';
-        failed.textContent = 'Gagal memuat log: ' + error.message;
-        logList.replaceChildren(failed);
-      }
-    }
-
-    logToggle.addEventListener('click', () => {
-      logsOpen = !logsOpen;
-
-      logPanel.classList.toggle('open', logsOpen);
-      logToggle.setAttribute('aria-expanded', String(logsOpen));
-      logToggle.textContent = logsOpen ? 'Sembunyikan Logs' : 'Tampilkan Logs';
-
-      if (logsOpen) {
-        loadLogs();
-        // Refresh tiap 3 detik selama panel terbuka, lalu berhenti saat ditutup.
-        refreshTimer = setInterval(loadLogs, 3000);
-      } else if (refreshTimer) {
-        clearInterval(refreshTimer);
-        refreshTimer = null;
+        showToast('Gagal: ' + error.message, true);
+      } finally {
+        logToggle.disabled = false;
       }
     });
+
+    loadEnv();
   </script>
 </body>
 </html>

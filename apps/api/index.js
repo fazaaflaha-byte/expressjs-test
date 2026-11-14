@@ -37,17 +37,12 @@ app.set('env', APP_ENV);
 // Kompresi gzip untuk semua response
 app.use(compression());
 
-// Log request disimpan in-memory dengan batas ukuran, supaya memori tidak
-// tumbuh terus selama proses hidup. Bukan pengganti logging permanen —
-// isinya hilang setiap kali proses restart.
-const MAX_LOGS = 200;
-const requestLogs = [];
+// Body parser kecil, hanya dipakai endpoint tombol
+app.use(express.json());
 
-function recordLog(entry) {
-  requestLogs.push(entry);
-  if (requestLogs.length > MAX_LOGS) {
-    requestLogs.shift();
-  }
+// Log setiap request ke terminal.
+function timestamp() {
+  return new Date().toLocaleTimeString('id-ID', { hour12: false });
 }
 
 app.use((req, res, next) => {
@@ -55,15 +50,10 @@ app.use((req, res, next) => {
 
   res.on('finish', () => {
     const durationMs = Number(process.hrtime.bigint() - startedAt) / 1e6;
-
-    recordLog({
-      time: new Date().toISOString(),
-      method: req.method,
-      path: req.originalUrl,
-      status: res.statusCode,
-      durationMs: Number(durationMs.toFixed(1)),
-      ip: req.ip,
-    });
+    console.log(
+      `[${timestamp()}] ${req.method} ${req.originalUrl} ` +
+        `→ ${res.statusCode} (${durationMs.toFixed(1)}ms)`
+    );
   });
 
   next();
@@ -100,27 +90,33 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', uptime: Math.round(process.uptime()) });
 });
 
-// Endpoint log request. Endpoint ini sendiri tidak ikut dicatat, supaya
-// polling dari halaman tidak memenuhi buffer dengan dirinya sendiri.
-// Dibandingkan dengan startsWith agar "/api/logs?limit=10" juga terlewati.
-function isLogEndpoint(pathValue) {
-  return pathValue.startsWith('/api/logs');
-}
-
-app.get('/api/logs', (req, res) => {
+// Endpoint tombol: satu-satunya tugasnya adalah mencetak baris log
+// yang mencolok di terminal server setiap kali tombol ditekan.
+app.post('/api/click', (req, res) => {
   res.set('Cache-Control', 'no-store');
 
-  const limit = Math.min(Number(req.query.limit) || MAX_LOGS, MAX_LOGS);
-  const entries = requestLogs.filter((entry) => !isLogEndpoint(entry.path));
+  const dari = req.body && req.body.asal ? String(req.body.asal) : 'halaman';
+  const jumlah = req.body && Number(req.body.jumlah) ? Number(req.body.jumlah) : 1;
+
+  console.log('');
+  console.log('==========================================');
+  console.log(`  TOMBOL DITEKAN  (${timestamp()})`);
+  console.log(`  Asal   : ${dari}`);
+  console.log(`  Klik ke: ${jumlah}`);
+  console.log(`  IP     : ${req.ip}`);
+  console.log('==========================================');
+  console.log('');
 
   res.json({
-    total: entries.length,
-    max: MAX_LOGS,
-    logs: entries.slice(-limit).reverse(),
+    ok: true,
+    pesan: 'Klik tercatat di terminal',
+    waktu: new Date().toISOString(),
+    klikKe: jumlah,
   });
 });
 
 app.listen(PORT, HOST, () => {
   console.log(`Server berjalan di http://${HOST}:${PORT}`);
   console.log(`Mode: ${APP_ENV}${IS_PRODUCTION ? ' (production)' : ''}`);
+  console.log('Tekan tombol di halaman web untuk melihat log di terminal.');
 });
