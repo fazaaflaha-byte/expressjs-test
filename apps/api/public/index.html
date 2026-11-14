@@ -97,6 +97,122 @@
       font-size: 0.9rem;
       padding: 20px 0;
     }
+
+    .log-button {
+      appearance: none;
+      border: 1px solid #334155;
+      background: #1e293b;
+      color: #e2e8f0;
+      font: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 10px 22px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .log-button:hover {
+      background: #273549;
+      border-color: #475569;
+    }
+
+    .log-button:active {
+      transform: translateY(1px);
+    }
+
+    .log-button:focus-visible {
+      outline: 2px solid #60a5fa;
+      outline-offset: 2px;
+    }
+
+    .log-panel {
+      width: 100%;
+      max-width: 560px;
+      background: #020617;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      overflow: hidden;
+      display: none;
+    }
+
+    .log-panel.open {
+      display: block;
+    }
+
+    .log-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 16px;
+      background: #0b1220;
+      border-bottom: 1px solid #1e293b;
+      font-size: 0.78rem;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .log-list {
+      max-height: 320px;
+      overflow-y: auto;
+      font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+      font-size: 0.78rem;
+      line-height: 1.55;
+    }
+
+    .log-entry {
+      display: flex;
+      gap: 10px;
+      padding: 7px 16px;
+      border-bottom: 1px solid #0f172a;
+      white-space: nowrap;
+    }
+
+    .log-entry:last-child {
+      border-bottom: none;
+    }
+
+    .log-time {
+      color: #475569;
+      flex-shrink: 0;
+    }
+
+    .log-method {
+      color: #93c5fd;
+      flex-shrink: 0;
+      font-weight: 600;
+    }
+
+    .log-path {
+      color: #cbd5e1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .log-status {
+      margin-left: auto;
+      flex-shrink: 0;
+      font-weight: 600;
+    }
+
+    .log-status.ok      { color: #6ee7b7; }
+    .log-status.redirect{ color: #fcd34d; }
+    .log-status.error   { color: #fca5a5; }
+
+    .log-duration {
+      color: #64748b;
+      flex-shrink: 0;
+      min-width: 52px;
+      text-align: right;
+    }
+
+    .log-empty {
+      padding: 24px 16px;
+      text-align: center;
+      color: #475569;
+    }
   </style>
 </head>
 <body>
@@ -106,6 +222,20 @@
 
   <div id="env-card" class="env-card">
     <div class="loading">Memuat konfigurasi…</div>
+  </div>
+
+  <button id="log-toggle" class="log-button" type="button" aria-expanded="false" aria-controls="log-panel">
+    Tampilkan Logs
+  </button>
+
+  <div id="log-panel" class="log-panel">
+    <div class="log-panel-header">
+      <span>Request logs</span>
+      <span id="log-count">0</span>
+    </div>
+    <div id="log-list" class="log-list">
+      <div class="log-empty">Belum ada log.</div>
+    </div>
   </div>
 
   <script>
@@ -160,6 +290,93 @@
     }
 
     loadEnv();
+
+    const logToggle = document.getElementById('log-toggle');
+    const logPanel = document.getElementById('log-panel');
+    const logList = document.getElementById('log-list');
+    const logCount = document.getElementById('log-count');
+
+    let logsOpen = false;
+    let refreshTimer = null;
+
+    function statusClass(status) {
+      if (status >= 500) return 'error';
+      if (status >= 400) return 'error';
+      if (status >= 300) return 'redirect';
+      return 'ok';
+    }
+
+    function logEntryNode(entry) {
+      const row = document.createElement('div');
+      row.className = 'log-entry';
+
+      const time = new Date(entry.time);
+      const timeNode = document.createElement('span');
+      timeNode.className = 'log-time';
+      timeNode.textContent = time.toLocaleTimeString('id-ID', { hour12: false });
+
+      const methodNode = document.createElement('span');
+      methodNode.className = 'log-method';
+      methodNode.textContent = entry.method;
+
+      const pathNode = document.createElement('span');
+      pathNode.className = 'log-path';
+      pathNode.textContent = entry.path;
+      pathNode.title = entry.path;
+
+      const statusNode = document.createElement('span');
+      statusNode.className = 'log-status ' + statusClass(entry.status);
+      statusNode.textContent = String(entry.status);
+
+      const durationNode = document.createElement('span');
+      durationNode.className = 'log-duration';
+      durationNode.textContent = entry.durationMs + 'ms';
+
+      row.append(timeNode, methodNode, pathNode, statusNode, durationNode);
+      return row;
+    }
+
+    async function loadLogs() {
+      try {
+        const response = await fetch('/api/logs');
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        const data = await response.json();
+
+        logCount.textContent = data.total + ' / ' + data.max;
+
+        if (!data.logs.length) {
+          const empty = document.createElement('div');
+          empty.className = 'log-empty';
+          empty.textContent = 'Belum ada log.';
+          logList.replaceChildren(empty);
+          return;
+        }
+
+        logList.replaceChildren(...data.logs.map(logEntryNode));
+      } catch (error) {
+        const failed = document.createElement('div');
+        failed.className = 'log-empty';
+        failed.textContent = 'Gagal memuat log: ' + error.message;
+        logList.replaceChildren(failed);
+      }
+    }
+
+    logToggle.addEventListener('click', () => {
+      logsOpen = !logsOpen;
+
+      logPanel.classList.toggle('open', logsOpen);
+      logToggle.setAttribute('aria-expanded', String(logsOpen));
+      logToggle.textContent = logsOpen ? 'Sembunyikan Logs' : 'Tampilkan Logs';
+
+      if (logsOpen) {
+        loadLogs();
+        // Refresh tiap 3 detik selama panel terbuka, lalu berhenti saat ditutup.
+        refreshTimer = setInterval(loadLogs, 3000);
+      } else if (refreshTimer) {
+        clearInterval(refreshTimer);
+        refreshTimer = null;
+      }
+    });
   </script>
 </body>
 </html>

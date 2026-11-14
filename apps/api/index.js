@@ -37,6 +37,38 @@ app.set('env', APP_ENV);
 // Kompresi gzip untuk semua response
 app.use(compression());
 
+// Log request disimpan in-memory dengan batas ukuran, supaya memori tidak
+// tumbuh terus selama proses hidup. Bukan pengganti logging permanen —
+// isinya hilang setiap kali proses restart.
+const MAX_LOGS = 200;
+const requestLogs = [];
+
+function recordLog(entry) {
+  requestLogs.push(entry);
+  if (requestLogs.length > MAX_LOGS) {
+    requestLogs.shift();
+  }
+}
+
+app.use((req, res, next) => {
+  const startedAt = process.hrtime.bigint();
+
+  res.on('finish', () => {
+    const durationMs = Number(process.hrtime.bigint() - startedAt) / 1e6;
+
+    recordLog({
+      time: new Date().toISOString(),
+      method: req.method,
+      path: req.originalUrl,
+      status: res.statusCode,
+      durationMs: Number(durationMs.toFixed(1)),
+      ip: req.ip,
+    });
+  });
+
+  next();
+});
+
 // Cache agresif untuk aset statis saat production, tapi HTML tidak boleh
 // di-cache lama — kalau tidak, perubahan halaman tidak pernah sampai ke user.
 app.use(
@@ -66,6 +98,26 @@ app.get('/api/info', (_req, res) => {
 // Health check untuk monitoring / load balancer
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', uptime: Math.round(process.uptime()) });
+});
+
+// Endpoint log request. Endpoint ini sendiri tidak ikut dicatat, supaya
+// polling dari halaman tidak memenuhi buffer dengan dirinya sendiri.
+// Dibandingkan dengan startsWith agar "/api/logs?limit=10" juga terlewati.
+function isLogEndpoint(pathValue) {
+  return pathValue.startsWith('/api/logs');
+}
+
+app.get('/api/logs', (req, res) => {
+  res.set('Cache-Control', 'no-store');
+
+  const limit = Math.min(Number(req.query.limit) || MAX_LOGS, MAX_LOGS);
+  const entries = requestLogs.filter((entry) => !isLogEndpoint(entry.path));
+
+  res.json({
+    total: entries.length,
+    max: MAX_LOGS,
+    logs: entries.slice(-limit).reverse(),
+  });
 });
 
 app.listen(PORT, HOST, () => {
