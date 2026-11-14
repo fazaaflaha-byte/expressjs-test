@@ -11,6 +11,14 @@ const APP_NAME = process.env.APP_NAME || 'Halloworld';
 const APP_ENV = process.env.NODE_ENV || 'development';
 const IS_PRODUCTION = APP_ENV === 'production';
 
+// Root directory untuk file statis, bisa diatur lewat STATIC_ROOT.
+// Absolute path (/x/b, C:\x\b) dipakai apa adanya,
+// relative path dihitung dari folder tempat index.js berada.
+const STATIC_ROOT = path.resolve(
+  __dirname,
+  process.env.STATIC_ROOT || 'public'
+);
+
 // Di balik reverse proxy (nginx, load balancer, Railway, dsb),
 // header X-Forwarded-* perlu dipercaya agar req.ip dan protokol benar.
 if (IS_PRODUCTION) {
@@ -27,7 +35,7 @@ app.use(compression());
 // Cache agresif untuk aset statis saat production, tapi HTML tidak boleh
 // di-cache lama — kalau tidak, perubahan halaman tidak pernah sampai ke user.
 app.use(
-  express.static(path.join(__dirname, 'public'), {
+  express.static(STATIC_ROOT, {
     maxAge: IS_PRODUCTION ? '1y' : 0,
     immutable: IS_PRODUCTION,
     setHeaders(res, filePath) {
