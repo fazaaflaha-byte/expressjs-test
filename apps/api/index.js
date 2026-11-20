@@ -8,6 +8,9 @@ require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 const express = require('express');
 const compression = require('compression');
 
+const redisStore = require('./lib/redis-store');
+const redisNotesRouter = require('./routes/redis-notes');
+
 const app = express();
 
 const PORT = process.env.PORT || 3000;
@@ -85,10 +88,18 @@ app.get('/api/info', (_req, res) => {
   });
 });
 
-// Health check untuk monitoring / load balancer
-app.get('/health', (_req, res) => {
-  res.json({ status: 'ok', uptime: Math.round(process.uptime()) });
+// 健康检查：同时报告 Redis 是否可用，但 Redis 掉线不会让该接口失败。
+app.get('/health', async (_req, res) => {
+  const redis = await redisStore.getStatus();
+  res.json({
+    status: 'ok',
+    uptime: Math.round(process.uptime()),
+    redis: { connected: redis.connected, ping: redis.ping },
+  });
 });
+
+// Redis 笔记功能（连接状态 + CRUD）
+app.use('/api/redis', redisNotesRouter);
 
 // Endpoint tombol: satu-satunya tugasnya adalah mencetak baris log
 // yang mencolok di terminal server setiap kali tombol ditekan.
@@ -115,8 +126,23 @@ app.post('/api/click', (req, res) => {
   });
 });
 
-app.listen(PORT, HOST, () => {
+// 启动时连接 Redis；连接失败不阻塞服务，后台每 5 秒自动重试
+redisStore.start();
+
+const server = app.listen(PORT, HOST, () => {
   console.log(`Server berjalan di http://${HOST}:${PORT}`);
   console.log(`Mode: ${APP_ENV}${IS_PRODUCTION ? ' (production)' : ''}`);
   console.log('Tekan tombol di halaman web untuk melihat log di terminal.');
 });
+
+// 优雅退出：关闭 HTTP 服务并断开 Redis
+function shutdown(signal) {
+  console.log(`\n${signal} diterima, menutup server…`);
+  server.close(async () => {
+    await redisStore.stop();
+    process.exit(0);
+  });
+}
+
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));

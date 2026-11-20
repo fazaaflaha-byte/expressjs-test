@@ -16,9 +16,9 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start;
       gap: 24px;
-      padding: 24px;
+      padding: 48px 24px 72px;
       font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
       background: #0f172a;
       color: #f1f5f9;
@@ -170,6 +170,239 @@
       color: #fecaca;
       border-color: #b91c1c;
     }
+
+    /* ---------- Redis: status & catatan ---------- */
+    .panel {
+      width: 100%;
+      max-width: 760px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .panel-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+    }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+    }
+
+    .status-item {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .status-label {
+      color: #94a3b8;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+
+    .status-value {
+      font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+      font-size: 0.92rem;
+      font-weight: 600;
+      word-break: break-word;
+    }
+
+    .status-value.connected { color: #6ee7b7; }
+    .status-value.disconnected { color: #fca5a5; }
+
+    .dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 8px;
+      background: #64748b;
+      vertical-align: middle;
+    }
+
+    .dot.on { background: #34d399; box-shadow: 0 0 8px rgba(52, 211, 153, 0.8); }
+    .dot.off { background: #f87171; }
+
+    .status-error {
+      color: #fca5a5;
+      font-size: 0.8rem;
+    }
+
+    .status-error:empty { display: none; }
+
+    .note-form,
+    .edit-form {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .field > label {
+      color: #94a3b8;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .field input,
+    .field textarea,
+    .field select {
+      width: 100%;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      color: #f1f5f9;
+      font: inherit;
+      font-size: 0.92rem;
+      padding: 10px 12px;
+      resize: vertical;
+    }
+
+    .field select { cursor: pointer; }
+
+    .field input:focus,
+    .field textarea:focus,
+    .field select:focus {
+      outline: 2px solid #60a5fa;
+      outline-offset: 1px;
+      border-color: #60a5fa;
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: flex-end;
+    }
+
+    .row > .field { flex: 1 1 200px; }
+    .row > .field.shrink { flex: 0 0 auto; }
+
+    .btn {
+      appearance: none;
+      border: 1px solid #334155;
+      background: #1e293b;
+      color: #e2e8f0;
+      font: inherit;
+      font-size: 0.88rem;
+      font-weight: 600;
+      padding: 10px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .btn:hover { background: #273549; border-color: #475569; }
+    .btn:active { transform: translateY(1px); }
+    .btn:focus-visible { outline: 2px solid #60a5fa; outline-offset: 2px; }
+    .btn:disabled { opacity: 0.55; cursor: wait; }
+
+    .btn.primary { background: #2563eb; border-color: #1d4ed8; color: #eff6ff; }
+    .btn.primary:hover { background: #1d4ed8; }
+
+    .btn.danger { background: transparent; border-color: #7f1d1d; color: #fca5a5; }
+    .btn.danger:hover { background: #450a0a; border-color: #b91c1c; }
+
+    .btn.small { padding: 6px 12px; font-size: 0.78rem; border-radius: 7px; }
+
+    .notes-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      border-top: 1px solid #334155;
+      padding-top: 16px;
+    }
+
+    .notes-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .note {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .note-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .note-title {
+      font-size: 1rem;
+      font-weight: 700;
+      word-break: break-word;
+    }
+
+    .note-body {
+      color: #cbd5e1;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .note-meta {
+      display: flex;
+      gap: 8px 18px;
+      flex-wrap: wrap;
+      color: #64748b;
+      font-size: 0.75rem;
+      font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+    }
+
+    .note-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .empty {
+      color: #64748b;
+      font-size: 0.88rem;
+      text-align: center;
+      padding: 18px 0;
+    }
   </style>
 </head>
 <body>
@@ -190,6 +423,68 @@
   </p>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <section class="panel" aria-labelledby="redis-panel-title">
+    <div class="panel-head">
+      <h2 class="panel-title" id="redis-panel-title">Redis Notes</h2>
+      <button id="redis-refresh" class="btn" type="button">Muat ulang</button>
+    </div>
+
+    <div class="status-grid">
+      <div class="status-item">
+        <span class="status-label">Status koneksi</span>
+        <span id="status-state" class="status-value">Memeriksa…</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">Redis PING</span>
+        <span id="status-ping" class="status-value">—</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">Latensi</span>
+        <span id="status-latency" class="status-value">—</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">Terakhir diperiksa</span>
+        <span id="status-checked" class="status-value">—</span>
+      </div>
+    </div>
+    <p id="status-error" class="status-error" role="status"></p>
+
+    <form id="note-form" class="note-form" autocomplete="off">
+      <div class="field">
+        <label for="note-title">Judul</label>
+        <input id="note-title" name="title" maxlength="200" required placeholder="Judul catatan">
+      </div>
+      <div class="field">
+        <label for="note-body">Isi catatan</label>
+        <textarea id="note-body" name="body" rows="3" maxlength="20000" placeholder="Tulis isi catatan…"></textarea>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label for="note-ttl">TTL</label>
+          <select id="note-ttl" name="ttl">
+            <option value="1m">1 menit</option>
+            <option value="5m">5 menit</option>
+            <option value="1h">1 jam</option>
+            <option value="1d">1 hari</option>
+            <option value="permanent" selected>Permanen</option>
+          </select>
+        </div>
+        <div class="field shrink">
+          <button class="btn primary" type="submit">Simpan catatan</button>
+        </div>
+      </div>
+    </form>
+
+    <div class="notes-head">
+      <h3 class="panel-title" style="font-size: 0.95rem;">Catatan tersimpan</h3>
+      <span id="notes-count" class="note-meta">0 catatan</span>
+    </div>
+
+    <div id="notes-list" class="notes-list">
+      <p class="empty">Memuat catatan…</p>
+    </div>
+  </section>
 
   <script>
     function createRow(key, valueNode) {
@@ -279,6 +574,351 @@
     });
 
     loadEnv();
+  </script>
+
+  <script>
+    // Redis notes UI：状态轮询 + 笔记 CRUD，纯原生 JS，不依赖框架。
+    (function () {
+      const stateNode = document.getElementById('status-state');
+      const pingNode = document.getElementById('status-ping');
+      const latencyNode = document.getElementById('status-latency');
+      const checkedNode = document.getElementById('status-checked');
+      const errorNode = document.getElementById('status-error');
+      const notesList = document.getElementById('notes-list');
+      const notesCount = document.getElementById('notes-count');
+      const form = document.getElementById('note-form');
+      const titleInput = document.getElementById('note-title');
+      const bodyInput = document.getElementById('note-body');
+      const ttlSelect = document.getElementById('note-ttl');
+      const refreshBtn = document.getElementById('redis-refresh');
+      const submitBtn = form.querySelector('button[type="submit"]');
+
+      let notes = [];
+      let editingId = null;
+      let loadingNotes = false;
+
+      const notify =
+        typeof window.showToast === 'function'
+          ? (message, isError) => window.showToast(message, isError)
+          : (message) => console.log(message);
+
+      async function api(path, options) {
+        const response = await fetch(path, {
+          headers: { 'Content-Type': 'application/json' },
+          ...(options || {}),
+        });
+
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(data.error || 'HTTP ' + response.status);
+        }
+        return data;
+      }
+
+      function renderStatus(data) {
+        stateNode.className = 'status-value ' + (data.connected ? 'connected' : 'disconnected');
+        stateNode.replaceChildren();
+
+        const dot = document.createElement('span');
+        dot.className = 'dot ' + (data.connected ? 'on' : 'off');
+        stateNode.append(dot, document.createTextNode(data.connected ? 'Connected' : 'Disconnected'));
+
+        pingNode.textContent = data.ping || '—';
+        latencyNode.textContent = Number.isFinite(data.latencyMs) ? data.latencyMs + ' ms' : '—';
+        checkedNode.textContent = data.checkedAt
+          ? new Date(data.checkedAt).toLocaleTimeString('id-ID', { hour12: false })
+          : '—';
+        errorNode.textContent = data.error || '';
+      }
+
+      async function refreshStatus() {
+        try {
+          renderStatus(await api('/api/redis/status'));
+        } catch (error) {
+          renderStatus({
+            connected: false,
+            ping: null,
+            latencyMs: null,
+            checkedAt: new Date().toISOString(),
+            error: error.message,
+          });
+        }
+      }
+
+      async function loadNotes() {
+        if (loadingNotes) return;
+        loadingNotes = true;
+
+        try {
+          const data = await api('/api/redis/notes');
+          notes = (data.notes || []).map((note) => ({
+            ...note,
+            expiresAt:
+              note.ttl && !note.ttl.permanent ? Date.now() + note.ttl.remainingMs : null,
+          }));
+
+          if (editingId && !notes.some((note) => note.id === editingId)) {
+            editingId = null;
+          }
+
+          renderNotes();
+        } catch (error) {
+          notesCount.textContent = '0 catatan';
+          notesList.replaceChildren(emptyNode('Gagal memuat catatan: ' + error.message));
+        } finally {
+          loadingNotes = false;
+        }
+      }
+
+      function renderNotes() {
+        notesCount.textContent = notes.length + ' catatan';
+
+        if (notes.length === 0) {
+          notesList.replaceChildren(emptyNode('Belum ada catatan. Buat yang pertama di atas.'));
+          return;
+        }
+
+        notesList.replaceChildren(...notes.map(renderNote));
+      }
+
+      function renderNote(note) {
+        const card = document.createElement('article');
+        card.className = 'note';
+        card.dataset.id = note.id;
+
+        if (editingId === note.id) {
+          card.appendChild(buildEditForm(note));
+          return card;
+        }
+
+        const head = document.createElement('div');
+        head.className = 'note-head';
+
+        const title = document.createElement('h3');
+        title.className = 'note-title';
+        title.textContent = note.title || '(tanpa judul)';
+
+        const actions = document.createElement('div');
+        actions.className = 'note-actions';
+        actions.append(
+          makeButton('Edit', 'btn small', () => {
+            editingId = note.id;
+            renderNotes();
+          }),
+          makeButton('Hapus', 'btn danger small', () => removeNote(note))
+        );
+        head.append(title, actions);
+
+        const body = document.createElement('p');
+        body.className = 'note-body';
+        body.textContent = note.body || '(isi kosong)';
+
+        const meta = document.createElement('div');
+        meta.className = 'note-meta';
+
+        const created = document.createElement('span');
+        created.textContent = 'Dibuat: ' + formatDate(note.createdAt);
+
+        const ttl = document.createElement('span');
+        ttl.className = 'note-ttl';
+        if (note.expiresAt) ttl.dataset.expiresAt = String(note.expiresAt);
+        ttl.textContent = 'TTL: ' + remainingText(note);
+
+        meta.append(created, ttl);
+        card.append(head, body, meta);
+        return card;
+      }
+
+      function buildEditForm(note) {
+        const editForm = document.createElement('form');
+        editForm.className = 'edit-form';
+
+        const titleField = document.createElement('div');
+        titleField.className = 'field';
+        const titleLabel = document.createElement('label');
+        titleLabel.textContent = 'Judul';
+        const newTitle = document.createElement('input');
+        newTitle.value = note.title || '';
+        newTitle.maxLength = 200;
+        newTitle.required = true;
+        titleField.append(titleLabel, newTitle);
+
+        const bodyField = document.createElement('div');
+        bodyField.className = 'field';
+        const bodyLabel = document.createElement('label');
+        bodyLabel.textContent = 'Isi catatan';
+        const newBody = document.createElement('textarea');
+        newBody.value = note.body || '';
+        newBody.rows = 3;
+        newBody.maxLength = 20000;
+        bodyField.append(bodyLabel, newBody);
+
+        const actions = document.createElement('div');
+        actions.className = 'row';
+
+        const saveBtn = document.createElement('button');
+        saveBtn.type = 'submit';
+        saveBtn.className = 'btn primary small';
+        saveBtn.textContent = 'Simpan perubahan';
+
+        const cancelBtn = makeButton('Batal', 'btn small', () => {
+          editingId = null;
+          renderNotes();
+        });
+
+        actions.append(saveBtn, cancelBtn);
+        editForm.append(titleField, bodyField, actions);
+
+        editForm.addEventListener('submit', async (event) => {
+          event.preventDefault();
+
+          const title = newTitle.value.trim();
+          if (!title) {
+            notify('Judul wajib diisi', true);
+            newTitle.focus();
+            return;
+          }
+
+          saveBtn.disabled = true;
+          try {
+            await api('/api/redis/notes/' + encodeURIComponent(note.id), {
+              method: 'PUT',
+              body: JSON.stringify({ title, body: newBody.value }),
+            });
+            editingId = null;
+            notify('Perubahan disimpan ✓');
+            await loadNotes();
+          } catch (error) {
+            notify('Gagal menyimpan: ' + error.message, true);
+          } finally {
+            saveBtn.disabled = false;
+          }
+        });
+
+        return editForm;
+      }
+
+      async function removeNote(note) {
+        const label = note.title || '(tanpa judul)';
+        if (!window.confirm('Hapus catatan "' + label + '" dari Redis?')) return;
+
+        try {
+          await api('/api/redis/notes/' + encodeURIComponent(note.id), { method: 'DELETE' });
+          if (editingId === note.id) editingId = null;
+          notify('Catatan dihapus');
+          await loadNotes();
+          await refreshStatus();
+        } catch (error) {
+          notify('Gagal menghapus: ' + error.message, true);
+        }
+      }
+
+      function makeButton(text, className, onClick) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = className;
+        button.textContent = text;
+        button.addEventListener('click', onClick);
+        return button;
+      }
+
+      function emptyNode(text) {
+        const node = document.createElement('p');
+        node.className = 'empty';
+        node.textContent = text;
+        return node;
+      }
+
+      function formatDate(iso) {
+        if (!iso) return '—';
+        const date = new Date(iso);
+        if (Number.isNaN(date.getTime())) return '—';
+        return date.toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'medium' });
+      }
+
+      function formatRemaining(ms) {
+        if (ms === null || ms === undefined) return 'permanen';
+        if (!Number.isFinite(ms) || ms <= 0) return 'kedaluwarsa';
+
+        let rest = Math.ceil(ms / 1000);
+        const parts = [];
+        [
+          ['hari', 86400],
+          ['jam', 3600],
+          ['menit', 60],
+          ['detik', 1],
+        ].forEach(([label, size]) => {
+          const count = Math.floor(rest / size);
+          if (count > 0) {
+            parts.push(count + ' ' + label);
+            rest -= count * size;
+          }
+        });
+        return parts.join(' ');
+      }
+
+      function remainingText(note) {
+        if (!note.expiresAt) return 'permanen';
+        return formatRemaining(note.expiresAt - Date.now());
+      }
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const title = titleInput.value.trim();
+        if (!title) {
+          notify('Judul wajib diisi', true);
+          titleInput.focus();
+          return;
+        }
+
+        submitBtn.disabled = true;
+        try {
+          await api('/api/redis/notes', {
+            method: 'POST',
+            body: JSON.stringify({ title, body: bodyInput.value, ttl: ttlSelect.value }),
+          });
+          form.reset();
+          notify('Catatan tersimpan ✓');
+          await loadNotes();
+          await refreshStatus();
+        } catch (error) {
+          notify('Gagal menyimpan: ' + error.message, true);
+        } finally {
+          submitBtn.disabled = false;
+        }
+      });
+
+      refreshBtn.addEventListener('click', async () => {
+        refreshBtn.disabled = true;
+        try {
+          await Promise.all([refreshStatus(), loadNotes()]);
+        } finally {
+          refreshBtn.disabled = false;
+        }
+      });
+
+      // 每秒刷新一次 TTL 倒计时（仅改文本，不重绘列表）
+      setInterval(() => {
+        document.querySelectorAll('.note-ttl').forEach((node) => {
+          const raw = node.dataset.expiresAt;
+          if (!raw) {
+            node.textContent = 'TTL: permanen';
+            return;
+          }
+          node.textContent = 'TTL: ' + formatRemaining(Number(raw) - Date.now());
+        });
+      }, 1000);
+
+      // 每 5 秒刷新连接状态；每 15 秒同步一次笔记列表（编辑中暂停）
+      setInterval(refreshStatus, 5000);
+      setInterval(() => {
+        if (!editingId) loadNotes();
+      }, 15000);
+
+      refreshStatus();
+      loadNotes();
+    })();
   </script>
 </body>
 </html>
